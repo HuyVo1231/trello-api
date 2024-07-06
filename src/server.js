@@ -23,12 +23,21 @@ const START_SERVER = () => {
   // Middleware error handling
   app.use(errorHandlingMiddleware)
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
-    console.log(
-      `${env.AUTHOR} are connecting to the server at http://${env.APP_HOST}:${env.APP_PORT}/`
-    )
-  })
-
+  // Môi trường production support for Render
+  if (env.BUILD_MODE === 'production') {
+    app.listen(process.env.PORT, () => {
+      console.log(
+        `Production!!! ${env.AUTHOR} are connecting to the server at PORT: ${process.env.PORT}`
+      )
+    })
+  } else {
+    // môi trường local dev
+    app.listen(env.LOCAL_DEV_APP_PORT, env.LOCAL_DEV_APP_HOST, () => {
+      console.log(
+        `Local Dev!!! ${env.AUTHOR} are connecting to the server at http://${env.LOCAL_DEV_APP_HOST}:${env.LOCAL_DEV_APP_PORT}/`
+      )
+    })
+  }
   // Use async function in AsyncExitHook to handle asynchronous operations
   AsyncExitHook(async (callback) => {
     console.log('Server is shutting down...')
