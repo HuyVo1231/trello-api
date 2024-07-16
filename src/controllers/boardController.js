@@ -22,6 +22,19 @@ const getDetails = async (req, res, next) => {
   }
 }
 
+const getBoardsByUserId = async (req, res, next) => {
+  try {
+    const userId = req.params.id
+    const page = parseInt(req.query.page) || 1
+    const pageSize = parseInt(req.query.pageSize) || 10
+    const board = await boardService.getBoardsByUserId(userId, page, pageSize)
+
+    res.status(StatusCodes.OK).json(board)
+  } catch (error) {
+    next(error)
+  }
+}
+
 const update = async (req, res, next) => {
   try {
     const boardId = req.params.id
@@ -45,6 +58,7 @@ const moveCardToDifferentColumn = async (req, res, next) => {
 export const boardController = {
   createNew,
   getDetails,
+  getBoardsByUserId,
   update,
   moveCardToDifferentColumn
 }

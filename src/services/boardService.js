@@ -2,7 +2,6 @@
 import { boardModel } from '~/models/boardModel'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'
-
 import { slugify } from '~/utils/formatters'
 import ApiError from '~/utils/ApiError'
 import { StatusCodes } from 'http-status-codes'
@@ -50,6 +49,19 @@ const getDetails = async (boardId) => {
   }
 }
 
+const getBoardsByUserId = async (userId, page, pageSize) => {
+  try {
+    const board = await boardModel.getBoardsByUserId(userId, page, pageSize)
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, 'User not found')
+    }
+
+    return board
+  } catch (error) {
+    throw error
+  }
+}
+
 const update = async (boardId, reqBody) => {
   try {
     const updateData = {
@@ -57,11 +69,13 @@ const update = async (boardId, reqBody) => {
       updatedAt: Date.now()
     }
     const updatedBoard = await boardModel.update(boardId, updateData)
+
     return updatedBoard
   } catch (error) {
     throw error
   }
 }
+
 const moveCardToDifferentColumn = async (reqBody) => {
   try {
     // Update cardOrderIds của Column đang bị kéo
@@ -86,4 +100,10 @@ const moveCardToDifferentColumn = async (reqBody) => {
   }
 }
 
-export const boardService = { createNew, getDetails, update, moveCardToDifferentColumn }
+export const boardService = {
+  createNew,
+  getDetails,
+  update,
+  moveCardToDifferentColumn,
+  getBoardsByUserId
+}

@@ -1,5 +1,5 @@
 import Joi from 'joi'
-import { ObjectId, returnDocument } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import { GET_DB } from '~/config/mongodb'
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
 import { BOARD_TYPES } from '~/utils/constants'
@@ -13,6 +13,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   slug: Joi.string().required().min(3).trim().strict(),
   description: Joi.string().required().min(3).max(256).trim().strict(),
   type: Joi.string().valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE).required(),
+  boardOwner: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
 
   // Columns Order Ids is ObjectId needs to be OBJECT ID RULE
   columnOrderIds: Joi.array()
@@ -24,7 +25,7 @@ const BOARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false)
 })
 
-const INVALID_UPDATE_FIELD = ['_id', 'createdAt']
+const INVALID_UPDATE_FIELD = ['_id', 'createdAt', 'ownerId']
 
 const validateBeforeCreate = async (data) => {
   return await BOARD_COLLECTION_SCHEMA.validateAsync(data, {
@@ -35,6 +36,10 @@ const validateBeforeCreate = async (data) => {
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreate(data)
+
+    // Chuyển đổi ownerId thành ObjectId
+    const { boardOwner } = validData
+    validData.boardOwner = new ObjectId(boardOwner)
 
     const createdBoard = await GET_DB().collection(BOARD_COLLECTION_NAME).insertOne(validData)
     return createdBoard
@@ -91,6 +96,22 @@ const getDetails = async (id) => {
   }
 }
 
+const getBoardsByUserId = async (userId, page = 1, pageSize = 10) => {
+  try {
+    const skip = (page - 1) * pageSize
+    const boards = await GET_DB()
+      .collection(BOARD_COLLECTION_NAME)
+      .find({ boardOwner: new ObjectId(userId) })
+      .skip(skip)
+      .limit(pageSize)
+      .toArray()
+
+    return boards
+  } catch (error) {
+    throw new Error('Error fetching boards by user ID: ' + error.message)
+  }
+}
+
 // Function push 1 columnId vào columnOrderIds của board
 const pushColumnOrderIds = async (column) => {
   try {
@@ -137,7 +158,7 @@ const update = async (boardId, updateData) => {
     })
 
     if (updateData.columnOrderIds)
-      updateData.columnOrderIds = new ObjectId(updateData.columnOrderIds)
+      updateData.columnOrderIds = updateData.columnOrderIds.map((id) => new ObjectId(id))
 
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
@@ -158,6 +179,7 @@ export const boardModel = {
   BOARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
+  getBoardsByUserId,
   getDetails,
   pushColumnOrderIds,
   pullColumnOrderIds,
