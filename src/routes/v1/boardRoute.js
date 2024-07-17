@@ -25,5 +25,8 @@ Router.route('/supports/moving_card').put(
 
 // GET BOARDS BY USER ID
 Router.route('/getBoardsByUserId/:id').get(boardController.getBoardsByUserId)
-
+Router.route('/deleteBoardsByUserId/').delete(
+  boardValidation.deleteBoard,
+  boardController.deleteBoard
+)
 export const boardRoute = Router

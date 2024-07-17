@@ -58,6 +58,21 @@ const findOneById = async (id) => {
   }
 }
 
+const findAllById = async (boardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .find({
+        boardId: new ObjectId(boardId)
+      })
+      .toArray()
+
+    return result || []
+  } catch (error) {
+    throw new Error(error)
+  }
+}
+
 // Function push 1 cardId vào cardOrderIds của board
 const pushCardOrderIds = async (card) => {
   try {
@@ -124,5 +139,6 @@ export const columnModel = {
   findOneById,
   pushCardOrderIds,
   update,
-  deleteOneById
+  deleteOneById,
+  findAllById
 }

@@ -82,8 +82,25 @@ const moveCardToDifferentColumn = async (req, res, next) => {
   }
 }
 
+const deleteBoard = async (req, res, next) => {
+  const correctCondition = Joi.object({
+    idBoard: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
+    boardOwner: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
+  })
+
+  try {
+    await correctCondition.validateAsync(req.body)
+    next()
+  } catch (error) {
+    const errorMessage = new Error(error).message
+    const customError = new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, errorMessage)
+    next(customError)
+  }
+}
+
 export const boardValidation = {
   createNew,
   update,
-  moveCardToDifferentColumn
+  moveCardToDifferentColumn,
+  deleteBoard
 }

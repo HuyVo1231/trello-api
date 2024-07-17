@@ -100,10 +100,29 @@ const moveCardToDifferentColumn = async (reqBody) => {
   }
 }
 
+// Delete 1 column
+const deleteBoard = async (reqBody) => {
+  try {
+    const { idBoard } = reqBody
+    const columns = await columnModel.findAllById(idBoard)
+    for (let i = 0; i < columns.length; i++) {
+      const column = columns[i]._id
+      await cardModel.deleteManyByColumnId(column)
+      await columnModel.deleteOneById(column)
+    }
+    await boardModel.deleteOneById(idBoard)
+
+    return { message: 'Board and all related columns and cards deleted successfully!' }
+  } catch (error) {
+    throw error
+  }
+}
+
 export const boardService = {
   createNew,
   getDetails,
   update,
   moveCardToDifferentColumn,
-  getBoardsByUserId
+  getBoardsByUserId,
+  deleteBoard
 }
